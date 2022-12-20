@@ -1,0 +1,113 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<conio.h>
+#include<string.h>
+#define MAX 20
+struct estab
+{
+    char csname[20];
+    char extsym[20];
+    int address;
+    int length;
+}es[MAX];
+int main()
+{
+    int flag=0, count=0, progaddr, csaddr, add, len;
+    char input[20], name[20], label[20];
+    FILE *fp1, *fp2;
+    fp1= fopen("input.txt","r");
+    fp2= fopen("output.txt","w");
+    progaddr= strtol(progaddr,NULL,16);
+    printf("ENTER THE STARTING LOCATION: ");
+    scanf("%x",&progaddr);
+    fscanf(fp1,"%s",input);
+    csaddr =progaddr;
+    int flag1=0;
+    while(strcmp(input,"END")!=0)
+    {
+        if(strcmp(input,"H")==0)
+        {
+            fscanf(fp1,"%s",name);
+            strcpy(es[count].csname,name);
+            flag1=0;
+            for(int i=0;i<count;i++)
+            {
+                if(strcmp(es[i].csname,name)==0&& strcmp(es[i].csname," ")!=0)
+                {
+                    printf("DUPLICATE EXTERNAL SYMBOL");
+                    flag1=1;
+                }
+            }
+            strcpy(es[count].extsym," ");
+            fscanf(fp1,"%x",&add);
+            es[count].address= csaddr+add;
+            fscanf(fp1,"%x",&len);
+            es[count].length= len;
+            if(flag==0)
+             fprintf(fp2,"%s\t\t%s\t\t%x\t\t%x\n",es[count].csname,es[count].extsym,es[count].address,es[count].length);
+            count++; 
+        }
+        else if(strcmp(input,"D")==0 && flag1==0)
+        {
+            fscanf(fp1,"%s",input);
+            flag=0;
+            while(strcmp(input,"R")!=0)
+            {
+                strcpy(es[count].csname," ");
+                strcpy(es[count].extsym,input);
+                flag=0;
+                for(int i=0;i<count;i++)
+                {
+                if(strcmp(es[i].extsym,es[count].extsym)==0&& strcmp(es[i].extsym," ")!=0)
+                   {
+                    printf("DUPLICATE CONTROL SECTION NAME SYMBOL");
+                    flag=1;
+                   }
+                }
+            fscanf(fp1,"%x",&add);
+            es[count].address= csaddr+add;
+            if(flag==0)
+             fprintf(fp2,"%s\t\t%s\t\t%x\t\t%x\n",es[count].csname,es[count].extsym,es[count].address,es[count].length);
+            count++; 
+            fscanf(fp1,"%s",input);
+            }
+            csaddr= csaddr+len;
+        }
+        else if(strcmp(input,"T")==0 )
+        {
+            while(strcmp(input,"E")!=0)
+             fscanf(fp1,"%s",input);
+        }
+        fscanf(fp1,"%s",input);
+    }
+    fclose(fp1);
+    fclose(fp2);
+    printf("Completed Pass 1\n");
+    return 0;
+}
+
+/*input.txt
+H PROGA 001000 000063
+D LISTA 001054 ENDA 00105A  
+R LISTB ENDB LISTC ENDC
+T 000020 0A 03201D 77100004 050014
+T 000054 0F 100014 000008 004051 000004 100000
+M 000024 05 +LISTB
+M 000054 06 +LISTC
+M 000060 06 +LISTB
+M 000060 06 -LISTA
+E 000020
+
+H PROGB 001000 00007F
+D LISTB 001060 ENDB 001070
+R LISTA LISTC ENDY
+T 001036 0B 03100000 772027 05100000
+T 001070 0F 100000 000008 004051 000004 100060
+M 000037 05 +LISTA
+M 00003E 05 -LISTA
+M 000070 06 -LISTA
+M 000070 06 +LISTC
+M 00007C 06 +PROGB
+M 00007C 06 -LISTA
+E 000000
+END*/

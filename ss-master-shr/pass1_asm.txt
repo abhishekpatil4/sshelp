@@ -1,0 +1,119 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+int main()
+{
+    char label[10], opcode[10], operand[10];
+    char code[10], mnemonic[3];
+    passOne(label, opcode, operand, code, mnemonic);
+
+    return 0;
+}
+void passOne(char label[10], char opcode[10], char operand[10], char code[10], char mnemonic[3])
+{
+    int locctr, start, length, oper;
+
+    FILE *fp1, *fp2, *fp3, *fp4, *fp5;
+    fp1 = fopen("input.txt", "r");
+    fp2 = fopen("optab.txt", "r");
+    fp3 = fopen("symtab.txt", "w");
+    fp4 = fopen("intermediate.txt", "w");
+    fp5 = fopen("length.txt", "w");
+    fscanf(fp1, "%s\t%s\t%x", label, opcode, &oper);
+    if (strcmp(opcode, "START") == 0)
+    {
+        start = oper;
+        locctr = start;
+        fprintf(fp4, "%s\t%s\t%x\n", label, opcode, oper); 
+        fscanf(fp1, "%s\t%s\t%s", label, opcode, operand);  
+    }  
+    else
+    {
+        locctr = 0;
+    }
+    char labels[50][20];
+    while (strcmp(opcode, "END") != 0)
+    {
+        fprintf(fp4, "%x\t%s\t%s\t%s\n", locctr, label, opcode, operand);
+        if (strcmp(label, "**") != 0)
+        {
+            fprintf(fp3, "%s\t%x\n", label, locctr);
+        }
+        fscanf(fp2, "%s\t%s", code, mnemonic);
+        while (strcmp(code, "END") != 0)
+        {
+            if (strcmp(opcode, code) == 0)
+            {
+                locctr += 3;
+                break;
+            }
+            fscanf(fp2, "%s\t%s", code, mnemonic);
+        }
+        if (strcmp(opcode, "WORD") == 0)
+        {
+            locctr += 3;
+        }
+        else if (strcmp(opcode, "RESW") == 0)
+        {
+            locctr += (3 * (atoi(operand))); // convert operand to integer and multiply with 3
+        }
+        else if (strcmp(opcode, "BYTE") == 0)
+        {
+            locctr += strlen(operand) - 3;
+        }
+        else if (strcmp(opcode, "RESB") == 0)
+        {
+            locctr += atoi(operand);
+        }
+        fscanf(fp1, "%s\t%s\t%s", label, opcode, operand);
+    }
+    fprintf(fp4, "%x\t%s\t%s\t%s\n", locctr, label, opcode, operand);
+    fclose(fp4);
+    fclose(fp3);
+    fclose(fp2);
+    fclose(fp1);
+    int i = 0;
+    int ad;
+    fp3 = fopen("symtab.txt", "r");
+    while (fscanf(fp3, "%s%d", labels[i], &ad) != EOF)
+    {
+        i++;
+    }
+    for (int j = 0; j < i; j++)
+    {
+        for (int k = j + 1; k < i; k++)
+        {
+            if (strcmp(labels[j], labels[k]) == 0)
+            {
+                printf("Duplicate label %s found at %d and %d position", labels[j], j, k);
+                exit(0);
+            }
+        }
+    }
+    fclose(fp3);
+    length = locctr - start;
+    fprintf(fp5, "%x", length);
+    fclose(fp5);
+}
+
+
+/* INPUT FILE
+**	START	2000
+**	LDA	    FIVE
+**	STA	    ALPHA
+** 	LDCH 	CHARZ
+** 	STCH 	C1
+ALPHA 	RESW 	20
+FIVE 	WORD 	12
+CHARZ 	BYTE 	X'07'
+C1 	RESB 	10
+** 	END	**
+*/
+
+/* OPTAB
+LDA     03
+STA	    0f
+LDCH	53
+STCH	57
+END	    *
+*/
